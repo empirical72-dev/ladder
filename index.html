@@ -3,22 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>사다리 게임</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
-    h1 { margin-bottom: 20px; }
-    .input-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .input-row input, .input-row button { height: 40px; padding: 0 10px; font-size: 16px; }
-    ul { list-style: none; padding: 0; margin: 10px auto; text-align: center; }
-    ul li { display: inline-block; margin: 5px 15px; font-size: 16px; }
-    button.delete { margin-left: 10px; color: red; }
-    #controls { margin: 20px 0; }
-    #controls button { margin: 0 10px; height: 40px; font-size: 16px; }
-    canvas { border: 2px solid #333; margin-top: 20px; background: #fff; }
-    #result { margin-top: 20px; }
-    table { margin: 0 auto; border-collapse: collapse; font-size: 16px; }
-    table, th, td { border: 1px solid #333; padding: 8px 12px; }
-    th { background: #eee; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>사다리 게임</h1>
@@ -44,149 +29,15 @@
     <button onclick="drawLadder()">사다리 실행</button>
   </div>
 
+  <!-- 참가자 버튼 -->
+  <div id="playerButtons"></div>
+
   <!-- 사다리 그림 -->
   <canvas id="ladderCanvas" width="800" height="500"></canvas>
 
   <!-- 결과 -->
   <div id="result"></div>
 
-  <script>
-    let players = [];
-    let items = [];
-    let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-    let ladderLines = [];
-
-    const canvas = document.getElementById("ladderCanvas");
-    const ctx = canvas.getContext("2d");
-
-    function addPlayer() {
-      const name = document.getElementById("playerInput").value.trim();
-      if (!name) return;
-      const label = playerLabels[players.length];
-      players.push({ name, label });
-      renderPlayers();
-      document.getElementById("playerInput").value = "";
-    }
-
-    function removePlayer(index) {
-      players.splice(index, 1);
-      renderPlayers();
-    }
-
-    function renderPlayers() {
-      const list = document.getElementById("playerList");
-      list.innerHTML = "";
-      players.forEach((p, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `<span class="label">${p.label}</span>${p.name}
-                        <button class="delete" onclick="removePlayer(${i})">X</button>`;
-        list.appendChild(li);
-      });
-    }
-
-    function addItem() {
-      const name = document.getElementById("itemName").value.trim();
-      const count = parseInt(document.getElementById("itemCount").value);
-      if (!name || isNaN(count) || count <= 0) return;
-      for (let i = 0; i < count; i++) {
-        items.push({ name });
-      }
-      renderItems();
-      document.getElementById("itemName").value = "";
-      document.getElementById("itemCount").value = "";
-    }
-
-    function removeItem(index) {
-      items.splice(index, 1);
-      renderItems();
-    }
-
-    function renderItems() {
-      const list = document.getElementById("itemList");
-      list.innerHTML = "";
-      items.forEach((item, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `${item.name}
-                        <button class="delete" onclick="removeItem(${i})">X</button>`;
-        list.appendChild(li);
-      });
-    }
-
-    function resetGame() {
-      players = [];
-      items = [];
-      ladderLines = [];
-      renderPlayers();
-      renderItems();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      document.getElementById("result").innerHTML = "";
-    }
-
-    function drawLadder() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ladderLines = [];
-
-      const topMargin = 80;
-      const bottomMargin = 420;
-      const spacing = canvas.width / (players.length + 1);
-
-      // 세로줄 + 참가자 라벨 (버튼처럼 클릭 가능)
-      players.forEach((p, i) => {
-        const x = spacing * (i + 1);
-        ctx.beginPath();
-        ctx.moveTo(x, topMargin);
-        ctx.lineTo(x, bottomMargin);
-        ctx.stroke();
-        ctx.font = "18px Arial";
-        ctx.fillText(`${p.label}. ${p.name}`, x - 30, topMargin - 20);
-
-        // 참가자 버튼 생성
-        const btn = document.createElement("button");
-        btn.innerText = `${p.label}. ${p.name}`;
-        btn.onclick = () => animatePlayer(i);
-        document.getElementById("result").appendChild(btn);
-      });
-
-      // 항목 라벨
-      items.forEach((item, i) => {
-        const x = spacing * (i + 1);
-        ctx.font = "18px Arial";
-        ctx.fillText(item.name, x - 30, bottomMargin + 30);
-      });
-
-      // 랜덤 가로줄
-      for (let j = 0; j < 15; j++) {
-        const lineY = topMargin + Math.random() * (bottomMargin - topMargin);
-        const col = Math.floor(Math.random() * (players.length - 1));
-        const x1 = spacing * (col + 1);
-        const x2 = spacing * (col + 2);
-        ctx.beginPath();
-        ctx.moveTo(x1, lineY);
-        ctx.lineTo(x2, lineY);
-        ctx.stroke();
-        ladderLines.push({ y: lineY, col });
-      }
-
-      ladderLines.sort((a, b) => a.y - b.y);
-    }
-
-    function animatePlayer(index) {
-      const topMargin = 80;
-      const bottomMargin = 420;
-      const spacing = canvas.width / (players.length + 1);
-
-      let col = index;
-      ladderLines.forEach(line => {
-        if (col === line.col) col++;
-        else if (col === line.col + 1) col--;
-      });
-      const item = items[col % items.length];
-
-      // 결과 표 출력
-      let html = document.getElementById("result").innerHTML;
-      html += `<br><table><tr><td>${players[index].label} (${players[index].name})</td><td>${item.name}</td></tr></table>`;
-      document.getElementById("result").innerHTML = html;
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
