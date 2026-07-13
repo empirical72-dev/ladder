@@ -6,13 +6,12 @@ let ladderLines = [];
 const canvas = document.getElementById("ladderCanvas");
 const ctx = canvas.getContext("2d");
 
-// 참가자별 색상 팔레트
 const playerColors = [
-  "red", "blue", "green", "orange", "purple", "brown", "pink", "teal",
-  "magenta", "cyan", "lime", "navy"
+  "red","blue","green","orange","purple","brown","pink","teal",
+  "magenta","cyan","lime","navy"
 ];
 
-// 참가자 추가
+// 참가자 추가/삭제/표시
 function addPlayer() {
   const name = document.getElementById("playerInput").value.trim();
   if (!name) return;
@@ -21,52 +20,42 @@ function addPlayer() {
   renderPlayers();
   document.getElementById("playerInput").value = "";
 }
-
-// 참가자 삭제
 function removePlayer(index) {
   players.splice(index, 1);
   renderPlayers();
 }
-
-// 참가자 리스트 표시
 function renderPlayers() {
   const list = document.getElementById("playerList");
   list.innerHTML = "";
   players.forEach((p, i) => {
     const li = document.createElement("li");
     li.innerHTML = `${p.label}. ${p.name}
-                    <button class="delete" onclick="removePlayer(${i})">X</button>`;
+      <button class="delete" onclick="removePlayer(${i})">X</button>`;
     list.appendChild(li);
   });
 }
 
-// 항목 추가
+// 항목 추가/삭제/표시
 function addItem() {
   const name = document.getElementById("itemName").value.trim();
   const count = parseInt(document.getElementById("itemCount").value);
   if (!name || isNaN(count) || count <= 0) return;
-  for (let i = 0; i < count; i++) {
-    items.push({ name });
-  }
+  for (let i = 0; i < count; i++) items.push({ name });
   renderItems();
   document.getElementById("itemName").value = "";
   document.getElementById("itemCount").value = "";
 }
-
-// 항목 삭제
 function removeItem(index) {
   items.splice(index, 1);
   renderItems();
 }
-
-// 항목 리스트 표시
 function renderItems() {
   const list = document.getElementById("itemList");
   list.innerHTML = "";
   items.forEach((item, i) => {
     const li = document.createElement("li");
     li.innerHTML = `${item.name}
-                    <button class="delete" onclick="removeItem(${i})">X</button>`;
+      <button class="delete" onclick="removeItem(${i})">X</button>`;
     list.appendChild(li);
   });
 }
@@ -112,15 +101,12 @@ function drawLadder() {
   });
 
   // 가로줄 생성
-  const minGap = 20;   // 최소 간격(px)
-  const safeGap = 40;  // 시작점 아래 안전거리(px)
+  const minGap = 20;   // 최소 간격
+  const safeGap = 40;  // 시작점 아래 안전거리
   let attempts = 0;
-
   while (ladderLines.length < 20 && attempts < 500) {
     const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
     const col = Math.floor(Math.random() * (players.length - 1));
-
-    // 같은 열에서만 간격 체크
     const tooClose = ladderLines.some(line => line.col === col && Math.abs(line.y - lineY) < minGap);
     if (!tooClose) {
       const x1 = spacing * (col + 1);
@@ -133,7 +119,6 @@ function drawLadder() {
     }
     attempts++;
   }
-
   ladderLines.sort((a, b) => a.y - b.y);
 
   // 참가자 버튼
@@ -155,7 +140,6 @@ function animatePlayer(index, shuffledItems) {
   let x = spacing * (index + 1);
   let y = topMargin;
   let col = index;
-
   const color = playerColors[index % playerColors.length];
 
   function step() {
@@ -205,18 +189,16 @@ function animatePlayer(index, shuffledItems) {
 function animateHorizontal(startX, endX, y, color, callback) {
   let currentX = startX;
   const stepSize = (endX > startX ? 5 : -5);
-
   function move() {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(currentX, y, 5, 0, Math.PI * 2);
     ctx.fill();
-
     if ((stepSize > 0 && currentX < endX) || (stepSize < 0 && currentX > endX)) {
       currentX += stepSize;
       requestAnimationFrame(move);
     } else {
-      callback(); // 가로 이동 끝나면 세로 이동 재개
+      callback();
     }
   }
   move();
