@@ -2,28 +2,180 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>사다리 게임 🎲</title>
-  <link rel="stylesheet" href="ladder.css">
+  <title>사다리 게임</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .input-row input, .input-row button { height: 36px; padding: 0 8px; font-size: 14px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; }
+    li span.label { font-weight: bold; margin-right: 5px; }
+    button.delete { margin-left: 10px; color: red; }
+    #result { margin-top: 20px; font-weight: bold; }
+    canvas { border: 1px solid #ccc; margin-top: 20px; }
+  </style>
 </head>
 <body>
-  <h1>사다리 게임 🎲</h1>
+  <h1>사다리 게임</h1>
 
-  <div>
-    <h3>참가자 입력</h3>
-    <input type="text" id="participantInput" placeholder="참가자 이름">
-    <button onclick="addParticipant()">추가</button>
-    <ul id="participantList"></ul>
-
-    <h3>항목 입력</h3>
-    <input type="text" id="optionInput" placeholder="항목 이름">
-    <button onclick="addOption()">추가</button>
-    <ul id="optionList"></ul>
-
-    <button onclick="startLadder()">사다리 타기!</button>
+  <!-- 참가자 입력 -->
+  <div class="input-row">
+    <input type="text" id="playerInput" placeholder="참가자 입력">
+    <button onclick="addPlayer()">추가</button>
   </div>
+  <ul id="playerList"></ul>
 
+  <!-- 항목 입력 -->
+  <div class="input-row">
+    <input type="text" id="itemName" placeholder="항목 입력">
+    <button onclick="addItem()">추가</button>
+  </div>
+  <ul id="itemList"></ul>
+
+  <!-- 전체 리셋 -->
+  <button onclick="resetGame()">전체 리셋</button>
+  <button onclick="runLadder()">사다리 실행</button>
+
+  <!-- 사다리 그림 -->
+  <canvas id="ladderCanvas" width="600" height="400"></canvas>
+
+  <!-- 결과 -->
   <div id="result"></div>
 
-  <script src="ladder.js"></script>
+  <script>
+    let players = [];
+    let items = [];
+    let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let ladderLines = []; // 가로줄 저장
+
+    const canvas = document.getElementById("ladderCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function addPlayer() {
+      const name = document.getElementById("playerInput").value.trim();
+      if (!name) return;
+      const label = playerLabels[players.length];
+      players.push({ name, label });
+      renderPlayers();
+      document.getElementById("playerInput").value = "";
+    }
+
+    function removePlayer(index) {
+      players.splice(index, 1);
+      renderPlayers();
+    }
+
+    function renderPlayers() {
+      const list = document.getElementById("playerList");
+      list.innerHTML = "";
+      players.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="label">${p.label}</span>${p.name}
+                        <button class="delete" onclick="removePlayer(${i})">X</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    function addItem() {
+      const name = document.getElementById("itemName").value.trim();
+      if (!name) return;
+      items.push({ name });
+      renderItems();
+      document.getElementById("itemName").value = "";
+    }
+
+    function removeItem(index) {
+      items.splice(index, 1);
+      renderItems();
+    }
+
+    function renderItems() {
+      const list = document.getElementById("itemList");
+      list.innerHTML = "";
+      items.forEach((item, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${item.name}
+                        <button class="delete" onclick="removeItem(${i})">X</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    function resetGame() {
+      players = [];
+      items = [];
+      ladderLines = [];
+      renderPlayers();
+      renderItems();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById("result").innerHTML = "";
+    }
+
+    function drawLadder() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ladderLines = [];
+
+      const topMargin = 50;
+      const bottomMargin = 350;
+      const spacing = canvas.width / (players.length + 1);
+
+      // 세로줄 + 참가자 라벨
+      players.forEach((p, i) => {
+        const x = spacing * (i + 1);
+        ctx.beginPath();
+        ctx.moveTo(x, topMargin);
+        ctx.lineTo(x, bottomMargin);
+        ctx.stroke();
+        ctx.fillText(`${p.label}. ${p.name}`, x - 20, topMargin - 20);
+      });
+
+      // 항목 라벨
+      items.forEach((item, i) => {
+        const x = spacing * (i + 1);
+        ctx.fillText(item.name, x - 20, bottomMargin + 20);
+      });
+
+      // 랜덤 가로줄
+      for (let j = 0; j < 10; j++) {
+        const lineY = topMargin + Math.random() * (bottomMargin - topMargin);
+        const col = Math.floor(Math.random() * (players.length - 1));
+        const x1 = spacing * (col + 1);
+        const x2 = spacing * (col + 2);
+        ctx.beginPath();
+        ctx.moveTo(x1, lineY);
+        ctx.lineTo(x2, lineY);
+        ctx.stroke();
+        ladderLines.push({ y: lineY, col });
+      }
+
+      // y좌표 기준으로 정렬 (위에서 아래로)
+      ladderLines.sort((a, b) => a.y - b.y);
+    }
+
+    function runLadder() {
+      if (players.length === 0 || items.length === 0) return;
+      drawLadder();
+
+      const topMargin = 50;
+      const bottomMargin = 350;
+      const spacing = canvas.width / (players.length + 1);
+
+      let results = [];
+
+      players.forEach((p, i) => {
+        let col = i;
+        ladderLines.forEach(line => {
+          if (col === line.col) {
+            col = col + 1; // 오른쪽으로 이동
+          } else if (col === line.col + 1) {
+            col = col - 1; // 왼쪽으로 이동
+          }
+        });
+        const item = items[col % items.length];
+        results.push(`${p.label} (${p.name}) → ${item.name}`);
+      });
+
+      document.getElementById("result").innerHTML = results.join("<br>");
+    }
+  </script>
 </body>
 </html>
