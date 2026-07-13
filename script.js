@@ -104,13 +104,16 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 랜덤 가로줄 (간격 조건 추가)
-  const minGap = 30; // 최소 간격(px)
+  // 랜덤 가로줄 (간격 조건 강화 + 시작점 아래 안전거리)
+  const minGap = 40;   // 가로줄 최소 간격(px)
+  const safeGap = 40;  // 세로줄 시작점 아래 최소 간격(px)
   let attempts = 0;
-  while (ladderLines.length < 15 && attempts < 200) {
-    const lineY = topMargin + Math.random() * (bottomMargin - topMargin);
+
+  while (ladderLines.length < 15 && attempts < 300) {
+    const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
     const col = Math.floor(Math.random() * (players.length - 1));
 
+    // 모든 열에 대해 간격 체크
     const tooClose = ladderLines.some(line => Math.abs(line.y - lineY) < minGap);
     if (!tooClose) {
       const x1 = spacing * (col + 1);
