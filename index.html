@@ -8,9 +8,8 @@
     h1 { margin-bottom: 20px; }
     .input-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
     .input-row input, .input-row button { height: 40px; padding: 0 10px; font-size: 16px; }
-    ul { list-style: none; padding: 0; margin: 10px auto; width: 300px; text-align: left; }
-    li { margin: 5px 0; }
-    li span.label { font-weight: bold; margin-right: 5px; }
+    ul { list-style: none; padding: 0; margin: 10px auto; text-align: center; }
+    ul li { display: inline-block; margin: 5px 15px; font-size: 16px; }
     button.delete { margin-left: 10px; color: red; }
     #controls { margin: 20px 0; }
     #controls button { margin: 0 10px; height: 40px; font-size: 16px; }
@@ -42,7 +41,7 @@
   <!-- 전체 리셋 & 실행 -->
   <div id="controls">
     <button onclick="resetGame()">전체 리셋</button>
-    <button onclick="runLadder()">사다리 실행</button>
+    <button onclick="drawLadder()">사다리 실행</button>
   </div>
 
   <!-- 사다리 그림 -->
@@ -89,7 +88,9 @@
       const name = document.getElementById("itemName").value.trim();
       const count = parseInt(document.getElementById("itemCount").value);
       if (!name || isNaN(count) || count <= 0) return;
-      items.push({ name, count });
+      for (let i = 0; i < count; i++) {
+        items.push({ name });
+      }
       renderItems();
       document.getElementById("itemName").value = "";
       document.getElementById("itemCount").value = "";
@@ -105,7 +106,7 @@
       list.innerHTML = "";
       items.forEach((item, i) => {
         const li = document.createElement("li");
-        li.innerHTML = `${item.name} (x${item.count})
+        li.innerHTML = `${item.name}
                         <button class="delete" onclick="removeItem(${i})">X</button>`;
         list.appendChild(li);
       });
@@ -129,21 +130,27 @@
       const bottomMargin = 420;
       const spacing = canvas.width / (players.length + 1);
 
-      // 세로줄 + 참가자 라벨
+      // 세로줄 + 참가자 라벨 (버튼처럼 클릭 가능)
       players.forEach((p, i) => {
         const x = spacing * (i + 1);
         ctx.beginPath();
         ctx.moveTo(x, topMargin);
         ctx.lineTo(x, bottomMargin);
         ctx.stroke();
-        ctx.font = "16px Arial";
+        ctx.font = "18px Arial";
         ctx.fillText(`${p.label}. ${p.name}`, x - 30, topMargin - 20);
+
+        // 참가자 버튼 생성
+        const btn = document.createElement("button");
+        btn.innerText = `${p.label}. ${p.name}`;
+        btn.onclick = () => animatePlayer(i);
+        document.getElementById("result").appendChild(btn);
       });
 
       // 항목 라벨
       items.forEach((item, i) => {
         const x = spacing * (i + 1);
-        ctx.font = "16px Arial";
+        ctx.font = "18px Arial";
         ctx.fillText(item.name, x - 30, bottomMargin + 30);
       });
 
@@ -163,43 +170,22 @@
       ladderLines.sort((a, b) => a.y - b.y);
     }
 
-    function runLadder() {
-      if (players.length === 0 || items.length === 0) return;
-      drawLadder();
-
-      const spacing = canvas.width / (players.length + 1);
+    function animatePlayer(index) {
       const topMargin = 80;
       const bottomMargin = 420;
+      const spacing = canvas.width / (players.length + 1);
 
-      let results = [];
-      let i = 0;
+      let col = index;
+      ladderLines.forEach(line => {
+        if (col === line.col) col++;
+        else if (col === line.col + 1) col--;
+      });
+      const item = items[col % items.length];
 
-      function animatePlayer() {
-        if (i >= players.length) {
-          // 결과 표 출력
-          let html = "<table><tr><th>참가자</th><th>결과</th></tr>";
-          results.forEach(r => {
-            html += `<tr><td>${r.player}</td><td>${r.item}</td></tr>`;
-          });
-          html += "</table>";
-          document.getElementById("result").innerHTML = html;
-          return;
-        }
-
-        let p = players[i];
-        let col = i;
-        ladderLines.forEach(line => {
-          if (col === line.col) col++;
-          else if (col === line.col + 1) col--;
-        });
-        const item = items[col % items.length];
-        results.push({ player: `${p.label} (${p.name})`, item: item.name });
-
-        i++;
-        setTimeout(animatePlayer, 1000); // 1초 간격으로 순서대로 결과 표시
-      }
-
-      animatePlayer();
+      // 결과 표 출력
+      let html = document.getElementById("result").innerHTML;
+      html += `<br><table><tr><td>${players[index].label} (${players[index].name})</td><td>${item.name}</td></tr></table>`;
+      document.getElementById("result").innerHTML = html;
     }
   </script>
 </body>
