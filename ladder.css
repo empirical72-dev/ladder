@@ -1,0 +1,23 @@
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  text-align: center;
+  background: #222;
+  color: gold;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+button {
+  margin: 4px;
+  padding: 6px 12px;
+  background: gold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover {
+  background: orange;
+}
