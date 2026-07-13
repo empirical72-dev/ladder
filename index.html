@@ -4,15 +4,21 @@
   <meta charset="UTF-8">
   <title>사다리 게임</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .input-row input, .input-row button { height: 36px; padding: 0 8px; font-size: 14px; }
-    ul { list-style: none; padding: 0; }
+    body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
+    h1 { margin-bottom: 20px; }
+    .input-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .input-row input, .input-row button { height: 40px; padding: 0 10px; font-size: 16px; }
+    ul { list-style: none; padding: 0; margin: 10px auto; width: 300px; text-align: left; }
     li { margin: 5px 0; }
     li span.label { font-weight: bold; margin-right: 5px; }
     button.delete { margin-left: 10px; color: red; }
-    #result { margin-top: 20px; font-weight: bold; }
-    canvas { border: 1px solid #ccc; margin-top: 20px; }
+    #controls { margin: 20px 0; }
+    #controls button { margin: 0 10px; height: 40px; font-size: 16px; }
+    canvas { border: 2px solid #333; margin-top: 20px; background: #fff; }
+    #result { margin-top: 20px; }
+    table { margin: 0 auto; border-collapse: collapse; font-size: 16px; }
+    table, th, td { border: 1px solid #333; padding: 8px 12px; }
+    th { background: #eee; }
   </style>
 </head>
 <body>
@@ -28,16 +34,19 @@
   <!-- 항목 입력 -->
   <div class="input-row">
     <input type="text" id="itemName" placeholder="항목 입력">
+    <input type="number" id="itemCount" placeholder="개수">
     <button onclick="addItem()">추가</button>
   </div>
   <ul id="itemList"></ul>
 
-  <!-- 전체 리셋 -->
-  <button onclick="resetGame()">전체 리셋</button>
-  <button onclick="runLadder()">사다리 실행</button>
+  <!-- 전체 리셋 & 실행 -->
+  <div id="controls">
+    <button onclick="resetGame()">전체 리셋</button>
+    <button onclick="runLadder()">사다리 실행</button>
+  </div>
 
   <!-- 사다리 그림 -->
-  <canvas id="ladderCanvas" width="600" height="400"></canvas>
+  <canvas id="ladderCanvas" width="800" height="500"></canvas>
 
   <!-- 결과 -->
   <div id="result"></div>
@@ -46,7 +55,7 @@
     let players = [];
     let items = [];
     let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-    let ladderLines = []; // 가로줄 저장
+    let ladderLines = [];
 
     const canvas = document.getElementById("ladderCanvas");
     const ctx = canvas.getContext("2d");
@@ -78,10 +87,12 @@
 
     function addItem() {
       const name = document.getElementById("itemName").value.trim();
-      if (!name) return;
-      items.push({ name });
+      const count = parseInt(document.getElementById("itemCount").value);
+      if (!name || isNaN(count) || count <= 0) return;
+      items.push({ name, count });
       renderItems();
       document.getElementById("itemName").value = "";
+      document.getElementById("itemCount").value = "";
     }
 
     function removeItem(index) {
@@ -94,7 +105,7 @@
       list.innerHTML = "";
       items.forEach((item, i) => {
         const li = document.createElement("li");
-        li.innerHTML = `${item.name}
+        li.innerHTML = `${item.name} (x${item.count})
                         <button class="delete" onclick="removeItem(${i})">X</button>`;
         list.appendChild(li);
       });
@@ -114,8 +125,8 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ladderLines = [];
 
-      const topMargin = 50;
-      const bottomMargin = 350;
+      const topMargin = 80;
+      const bottomMargin = 420;
       const spacing = canvas.width / (players.length + 1);
 
       // 세로줄 + 참가자 라벨
@@ -125,17 +136,19 @@
         ctx.moveTo(x, topMargin);
         ctx.lineTo(x, bottomMargin);
         ctx.stroke();
-        ctx.fillText(`${p.label}. ${p.name}`, x - 20, topMargin - 20);
+        ctx.font = "16px Arial";
+        ctx.fillText(`${p.label}. ${p.name}`, x - 30, topMargin - 20);
       });
 
       // 항목 라벨
       items.forEach((item, i) => {
         const x = spacing * (i + 1);
-        ctx.fillText(item.name, x - 20, bottomMargin + 20);
+        ctx.font = "16px Arial";
+        ctx.fillText(item.name, x - 30, bottomMargin + 30);
       });
 
       // 랜덤 가로줄
-      for (let j = 0; j < 10; j++) {
+      for (let j = 0; j < 15; j++) {
         const lineY = topMargin + Math.random() * (bottomMargin - topMargin);
         const col = Math.floor(Math.random() * (players.length - 1));
         const x1 = spacing * (col + 1);
@@ -147,7 +160,6 @@
         ladderLines.push({ y: lineY, col });
       }
 
-      // y좌표 기준으로 정렬 (위에서 아래로)
       ladderLines.sort((a, b) => a.y - b.y);
     }
 
@@ -155,26 +167,39 @@
       if (players.length === 0 || items.length === 0) return;
       drawLadder();
 
-      const topMargin = 50;
-      const bottomMargin = 350;
       const spacing = canvas.width / (players.length + 1);
+      const topMargin = 80;
+      const bottomMargin = 420;
 
       let results = [];
+      let i = 0;
 
-      players.forEach((p, i) => {
+      function animatePlayer() {
+        if (i >= players.length) {
+          // 결과 표 출력
+          let html = "<table><tr><th>참가자</th><th>결과</th></tr>";
+          results.forEach(r => {
+            html += `<tr><td>${r.player}</td><td>${r.item}</td></tr>`;
+          });
+          html += "</table>";
+          document.getElementById("result").innerHTML = html;
+          return;
+        }
+
+        let p = players[i];
         let col = i;
         ladderLines.forEach(line => {
-          if (col === line.col) {
-            col = col + 1; // 오른쪽으로 이동
-          } else if (col === line.col + 1) {
-            col = col - 1; // 왼쪽으로 이동
-          }
+          if (col === line.col) col++;
+          else if (col === line.col + 1) col--;
         });
         const item = items[col % items.length];
-        results.push(`${p.label} (${p.name}) → ${item.name}`);
-      });
+        results.push({ player: `${p.label} (${p.name})`, item: item.name });
 
-      document.getElementById("result").innerHTML = results.join("<br>");
+        i++;
+        setTimeout(animatePlayer, 1000); // 1초 간격으로 순서대로 결과 표시
+      }
+
+      animatePlayer();
     }
   </script>
 </body>
