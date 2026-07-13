@@ -2,6 +2,7 @@ let players = [];
 let items = [];
 let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 let ladderLines = [];
+let usedLines = new Set(); // 이미 지나간 가로줄 기록
 
 const canvas = document.getElementById("ladderCanvas");
 const ctx = canvas.getContext("2d");
@@ -65,6 +66,7 @@ function resetGame() {
   players = [];
   items = [];
   ladderLines = [];
+  usedLines.clear();
   renderPlayers();
   renderItems();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -76,6 +78,7 @@ function resetGame() {
 function drawLadder() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ladderLines = [];
+  usedLines.clear();
 
   const topMargin = 80;
   const bottomMargin = 420;
@@ -152,9 +155,11 @@ function animatePlayer(index, shuffledItems) {
 
     let crossed = false;
     for (let line of ladderLines) {
-      if (!crossed && Math.abs(y - line.y) < 3) {
+      const key = line.y + "-" + col;
+      if (!crossed && Math.abs(y - line.y) < 3 && !usedLines.has(key)) {
         if (col === line.col) {
           crossed = true;
+          usedLines.add(key);
           const targetX = spacing * (col + 2);
           animateHorizontal(x, targetX, y, color, () => {
             col++;
@@ -163,6 +168,7 @@ function animatePlayer(index, shuffledItems) {
           });
         } else if (col === line.col + 1) {
           crossed = true;
+          usedLines.add(key);
           const targetX = spacing * (col);
           animateHorizontal(x, targetX, y, color, () => {
             col--;
