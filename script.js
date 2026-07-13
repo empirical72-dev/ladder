@@ -1,3 +1,89 @@
+let players = [];
+let items = [];
+let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+let ladderLines = [];
+
+const canvas = document.getElementById("ladderCanvas");
+const ctx = canvas.getContext("2d");
+
+// 참가자별 색상 팔레트
+const playerColors = [
+  "red", "blue", "green", "orange", "purple", "brown", "pink", "teal",
+  "magenta", "cyan", "lime", "navy"
+];
+
+// 참가자 추가
+function addPlayer() {
+  const name = document.getElementById("playerInput").value.trim();
+  if (!name) return;
+  const label = playerLabels[players.length];
+  players.push({ name, label });
+  renderPlayers();
+  document.getElementById("playerInput").value = "";
+}
+
+// 참가자 삭제
+function removePlayer(index) {
+  players.splice(index, 1);
+  renderPlayers();
+}
+
+// 참가자 리스트 표시
+function renderPlayers() {
+  const list = document.getElementById("playerList");
+  list.innerHTML = "";
+  players.forEach((p, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `${p.label}. ${p.name}
+                    <button class="delete" onclick="removePlayer(${i})">X</button>`;
+    list.appendChild(li);
+  });
+}
+
+// 항목 추가
+function addItem() {
+  const name = document.getElementById("itemName").value.trim();
+  const count = parseInt(document.getElementById("itemCount").value);
+  if (!name || isNaN(count) || count <= 0) return;
+  for (let i = 0; i < count; i++) {
+    items.push({ name });
+  }
+  renderItems();
+  document.getElementById("itemName").value = "";
+  document.getElementById("itemCount").value = "";
+}
+
+// 항목 삭제
+function removeItem(index) {
+  items.splice(index, 1);
+  renderItems();
+}
+
+// 항목 리스트 표시
+function renderItems() {
+  const list = document.getElementById("itemList");
+  list.innerHTML = "";
+  items.forEach((item, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `${item.name}
+                    <button class="delete" onclick="removeItem(${i})">X</button>`;
+    list.appendChild(li);
+  });
+}
+
+// 리셋
+function resetGame() {
+  players = [];
+  items = [];
+  ladderLines = [];
+  renderPlayers();
+  renderItems();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("playerButtons").innerHTML = "";
+}
+
+// 사다리 그리기
 function drawLadder() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ladderLines = [];
@@ -61,6 +147,7 @@ function drawLadder() {
   });
 }
 
+// 애니메이션
 function animatePlayer(index, shuffledItems) {
   const spacing = canvas.width / (players.length + 1);
   const topMargin = 80;
@@ -79,7 +166,6 @@ function animatePlayer(index, shuffledItems) {
 
     y += 5;
 
-    // 가로줄 체크
     let crossed = false;
     for (let line of ladderLines) {
       if (!crossed && Math.abs(y - line.y) < 3) {
@@ -89,7 +175,7 @@ function animatePlayer(index, shuffledItems) {
           animateHorizontal(x, targetX, y, color, () => {
             col++;
             x = targetX;
-            requestAnimationFrame(step); // 가로 이동 끝나고 세로 이동 재개
+            requestAnimationFrame(step);
           });
         } else if (col === line.col + 1) {
           crossed = true;
@@ -115,6 +201,7 @@ function animatePlayer(index, shuffledItems) {
   step();
 }
 
+// 가로 이동 애니메이션
 function animateHorizontal(startX, endX, y, color, callback) {
   let currentX = startX;
   const stepSize = (endX > startX ? 5 : -5);
@@ -133,4 +220,16 @@ function animateHorizontal(startX, endX, y, color, callback) {
     }
   }
   move();
+}
+
+// 결과 표시
+function addResult(player, item) {
+  const resultDiv = document.getElementById("result");
+  if (!resultDiv.querySelector("table")) {
+    resultDiv.innerHTML = "<table><tr><th>참가자</th><th>결과</th></tr></table>";
+  }
+  const table = resultDiv.querySelector("table");
+  const row = document.createElement("tr");
+  row.innerHTML = `<td>${player.label}. ${player.name}</td><td>${item.name}</td>`;
+  table.appendChild(row);
 }
