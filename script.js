@@ -6,6 +6,12 @@ let ladderLines = [];
 const canvas = document.getElementById("ladderCanvas");
 const ctx = canvas.getContext("2d");
 
+// 참가자별 색상 팔레트
+const playerColors = [
+  "red", "blue", "green", "orange", "purple", "brown", "pink", "teal",
+  "magenta", "cyan", "lime", "navy"
+];
+
 function addPlayer() {
   const name = document.getElementById("playerInput").value.trim();
   if (!name) return;
@@ -25,7 +31,8 @@ function renderPlayers() {
   list.innerHTML = "";
   players.forEach((p, i) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span class="label">${p.label}</span>${p.name}
+    // A. 이름 형식으로 표시
+    li.innerHTML = `${p.label}. ${p.name}
                     <button class="delete" onclick="removePlayer(${i})">X</button>`;
     list.appendChild(li);
   });
@@ -78,7 +85,7 @@ function drawLadder() {
   const bottomMargin = 420;
   const spacing = canvas.width / (players.length + 1);
 
-  // 세로줄 + 참가자 라벨
+  // 참가자 라벨 (A. 이름)
   players.forEach((p, i) => {
     const x = spacing * (i + 1);
     ctx.beginPath();
@@ -89,25 +96,34 @@ function drawLadder() {
     ctx.fillText(`${p.label}. ${p.name}`, x - 30, topMargin - 20);
   });
 
-  // 항목 라벨
-  items.forEach((item, i) => {
+  // 항목 라벨 (랜덤 순서)
+  const shuffledItems = [...items].sort(() => Math.random() - 0.5);
+  shuffledItems.forEach((item, i) => {
     const x = spacing * (i + 1);
     ctx.font = "18px Arial";
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 랜덤 가로줄
-  for (let j = 0; j < 15; j++) {
+  // 랜덤 가로줄 (간격 조건 추가)
+  const minGap = 30; // 최소 간격(px)
+  let attempts = 0;
+  while (ladderLines.length < 15 && attempts < 200) {
     const lineY = topMargin + Math.random() * (bottomMargin - topMargin);
     const col = Math.floor(Math.random() * (players.length - 1));
-    const x1 = spacing * (col + 1);
-    const x2 = spacing * (col + 2);
-    ctx.beginPath();
-    ctx.moveTo(x1, lineY);
-    ctx.lineTo(x2, lineY);
-    ctx.stroke();
-    ladderLines.push({ y: lineY, col });
+
+    const tooClose = ladderLines.some(line => Math.abs(line.y - lineY) < minGap && line.col === col);
+    if (!tooClose) {
+      const x1 = spacing * (col + 1);
+      const x2 = spacing * (col + 2);
+      ctx.beginPath();
+      ctx.moveTo(x1, lineY);
+      ctx.lineTo(x2, lineY);
+      ctx.stroke();
+      ladderLines.push({ y: lineY, col });
+    }
+    attempts++;
   }
+
   ladderLines.sort((a, b) => a.y - b.y);
 
   // 참가자 버튼 생성
@@ -116,12 +132,12 @@ function drawLadder() {
   players.forEach((p, i) => {
     const btn = document.createElement("button");
     btn.innerText = `${p.label}. ${p.name}`;
-    btn.onclick = () => animatePlayer(i);
+    btn.onclick = () => animatePlayer(i, shuffledItems);
     btnArea.appendChild(btn);
   });
 }
 
-function animatePlayer(index) {
+function animatePlayer(index, shuffledItems) {
   const spacing = canvas.width / (players.length + 1);
   const topMargin = 80;
   const bottomMargin = 420;
@@ -129,30 +145,60 @@ function animatePlayer(index) {
   let y = topMargin;
   let col = index;
 
+  const color = playerColors[index % playerColors.length]; // 참가자별 색상 선택
+
   function step() {
-    ctx.fillStyle = "red";
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(x, y, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    y += 5; // 내려가는 속도
+    y += 5;
 
-    // 가로줄 만나면 좌우 이동
+    // 가로줄 만나면 좌우 이동 (애니메이션 효과 추가)
     ladderLines.forEach(line => {
       if (Math.abs(y - line.y) < 3) {
-        if (col === line.col) { col++; x = spacing * (col + 1); }
-        else if (col === line.col + 1) { col--; x = spacing * (col + 1); }
+        if (col === line.col) {
+          const targetX = spacing * (col + 2);
+          animateHorizontal(x, targetX, y, color);
+          col++;
+          x = targetX;
+        } else if (col === line.col + 1) {
+          const targetX = spacing * (col);
+          animateHorizontal(x, targetX, y, color);
+          col--;
+          x = targetX;
+        }
       }
     });
 
     if (y < bottomMargin) {
       requestAnimationFrame(step);
     } else {
-      const item = items[col % items.length];
+      const item = shuffledItems[col % shuffledItems.length];
       addResult(players[index], item);
     }
   }
   step();
+}
+
+// 가로줄 애니메이션 함수
+function animateHorizontal(startX, endX, y, color) {
+  let currentX = startX;
+  const stepSize = (endX > startX ? 5 : -5);
+
+  function move() {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(currentX, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    if ((stepSize > 0 && currentX < endX) || (stepSize < 0 && currentX > endX)) {
+      currentX += stepSize;
+      requestAnimationFrame(move);
+    }
+  }
+  move();
 }
 
 function addResult(player, item) {
@@ -162,6 +208,6 @@ function addResult(player, item) {
   }
   const table = resultDiv.querySelector("table");
   const row = document.createElement("tr");
-  row.innerHTML = `<td>${player.label} (${player.name})</td><td>${item.name}</td>`;
+  row.innerHTML = `<td>${player.label}. ${player.name}</td><td>${item.name}</td>`;
   table.appendChild(row);
 }
