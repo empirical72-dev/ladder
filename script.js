@@ -100,10 +100,10 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 가로줄 생성 (절대 겹치지 않게, 위쪽/아래쪽 모두 간격 유지)
-  const minGap = 40;   // 최소 간격
-  const safeGapTop = 40;   // 위쪽 안전거리
-  const safeGapBottom = 40; // 아래쪽 안전거리
+  // 가로줄 생성 (위/아래 모두 안전거리 적용, 절대 겹치지 않음)
+  const minGap = 40;
+  const safeGapTop = 40;
+  const safeGapBottom = 40;
   for (let col = 0; col < players.length - 1; col++) {
     let count = 0;
     while (count < 3) {
