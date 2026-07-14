@@ -2,7 +2,6 @@ let players = [];
 let items = [];
 let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 let ladderLines = [];
-let usedLines = new Set(); // 이미 지나간 가로줄 기록
 
 const canvas = document.getElementById("ladderCanvas");
 const ctx = canvas.getContext("2d");
@@ -66,7 +65,6 @@ function resetGame() {
   players = [];
   items = [];
   ladderLines = [];
-  usedLines.clear();
   renderPlayers();
   renderItems();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -78,7 +76,6 @@ function resetGame() {
 function drawLadder() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ladderLines = [];
-  usedLines.clear();
 
   const topMargin = 80;
   const bottomMargin = 420;
@@ -103,14 +100,14 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 가로줄 생성 (각 열에 2~3줄 보장)
-  const minGap = 20;   // 최소 간격
+  // 가로줄 생성 (절대 겹치지 않게, 각 열마다 2~3줄 보장)
+  const minGap = 40;   // 최소 간격
   const safeGap = 40;  // 시작점 아래 안전거리
   for (let col = 0; col < players.length - 1; col++) {
     let count = 0;
-    while (count < 3) { // 각 열에 최소 2~3줄
+    while (count < 3) {
       const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
-      const tooClose = ladderLines.some(line => line.col === col && Math.abs(line.y - lineY) < minGap);
+      const tooClose = ladderLines.some(line => Math.abs(line.y - lineY) < minGap);
       if (!tooClose) {
         const x1 = spacing * (col + 1);
         const x2 = spacing * (col + 2);
@@ -146,6 +143,9 @@ function animatePlayer(index, shuffledItems) {
   let y = topMargin;
   let col = index;
   const color = playerColors[index % playerColors.length];
+
+  // 참가자별로 독립적인 usedLines 관리
+  let usedLines = new Set();
 
   function step() {
     ctx.fillStyle = color;
