@@ -169,7 +169,7 @@ function animatePlayer(index, shuffledItems) {
             x = targetX;
             requestAnimationFrame(step);
           });
-          return; // 가로 이동 중에는 세로 이동 중단
+          return;
         } else if (col === line.col + 1) {
           crossed = true;
           usedLines.add(key);
