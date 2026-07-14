@@ -135,7 +135,7 @@ function drawLadder() {
   });
 }
 
-// 애니메이션
+// 새로운 구조의 애니메이션
 function animatePlayer(index, shuffledItems) {
   const spacing = canvas.width / (players.length + 1);
   const topMargin = 80;
@@ -145,8 +145,9 @@ function animatePlayer(index, shuffledItems) {
   let col = index;
   const color = playerColors[index % playerColors.length];
 
-  // 참가자별로 독립적인 usedLines 관리
   let usedLines = new Set();
+  let state = "vertical"; // 현재 상태: vertical 또는 horizontal
+  let targetX = null;
 
   function step() {
     ctx.fillStyle = color;
@@ -154,65 +155,53 @@ function animatePlayer(index, shuffledItems) {
     ctx.arc(x, y, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    y += 5;
+    if (state === "vertical") {
+      y += 5;
 
-    let crossed = false;
-    for (let line of ladderLines) {
-      const key = line.y + "-" + col;
-      if (!crossed && Math.abs(y - line.y) < 3 && !usedLines.has(key)) {
-        if (col === line.col) {
-          crossed = true;
-          usedLines.add(key);
-          const targetX = spacing * (col + 2);
-          animateHorizontal(x, targetX, y, color, () => {
-            col++;
-            x = targetX;
-            requestAnimationFrame(step);
-          });
-          return;
-        } else if (col === line.col + 1) {
-          crossed = true;
-          usedLines.add(key);
-          const targetX = spacing * (col);
-          animateHorizontal(x, targetX, y, color, () => {
-            col--;
-            x = targetX;
-            requestAnimationFrame(step);
-          });
-          return;
+      let crossed = false;
+      for (let line of ladderLines) {
+        const key = line.y + "-" + col;
+        if (!crossed && Math.abs(y - line.y) < 3 && !usedLines.has(key)) {
+          if (col === line.col) {
+            crossed = true;
+            usedLines.add(key);
+            targetX = spacing * (col + 2);
+            state = "horizontal";
+          } else if (col === line.col + 1) {
+            crossed = true;
+            usedLines.add(key);
+            targetX = spacing * (col);
+            state = "horizontal";
+          }
         }
       }
-    }
 
-    if (!crossed) {
-      if (y < bottomMargin) {
-        requestAnimationFrame(step);
+      if (!crossed) {
+        if (y < bottomMargin) {
+          requestAnimationFrame(step);
+        } else {
+          const item = shuffledItems[col % shuffledItems.length];
+          addResult(players[index], item);
+        }
       } else {
-        const item = shuffledItems[col % shuffledItems.length];
-        addResult(players[index], item);
+        requestAnimationFrame(step); // 다음 루프에서 horizontal 실행
       }
-    }
-  }
-  step();
-}
 
-// 가로 이동 애니메이션
-function animateHorizontal(startX, endX, y, color, callback) {
-  let currentX = startX;
-  const stepSize = (endX > startX ? 5 : -5);
-  function move() {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(currentX, y, 5, 0, Math.PI * 2);
-    ctx.fill();
-    if ((stepSize > 0 && currentX < endX) || (stepSize < 0 && currentX > endX)) {
-      currentX += stepSize;
-      requestAnimationFrame(move);
-    } else {
-      callback();
+    } else if (state === "horizontal") {
+      const stepSize = (targetX > x ? 5 : -5);
+      x += stepSize;
+
+      if ((stepSize > 0 && x >= targetX) || (stepSize < 0 && x <= targetX)) {
+        // 가로 이동 완료
+        if (targetX > spacing * (col + 1)) col++;
+        else col--;
+        state = "vertical"; // 다시 세로 이동으로 전환
+      }
+      requestAnimationFrame(step);
     }
   }
-  move();
+
+  step();
 }
 
 // 결과 표시
