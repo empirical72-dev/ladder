@@ -103,25 +103,27 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 가로줄 생성
+  // 가로줄 생성 (각 열에 2~3줄 보장)
   const minGap = 20;   // 최소 간격
   const safeGap = 40;  // 시작점 아래 안전거리
-  let attempts = 0;
-  while (ladderLines.length < 20 && attempts < 500) {
-    const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
-    const col = Math.floor(Math.random() * (players.length - 1));
-    const tooClose = ladderLines.some(line => line.col === col && Math.abs(line.y - lineY) < minGap);
-    if (!tooClose) {
-      const x1 = spacing * (col + 1);
-      const x2 = spacing * (col + 2);
-      ctx.beginPath();
-      ctx.moveTo(x1, lineY);
-      ctx.lineTo(x2, lineY);
-      ctx.stroke();
-      ladderLines.push({ y: lineY, col });
+  for (let col = 0; col < players.length - 1; col++) {
+    let count = 0;
+    while (count < 3) { // 각 열에 최소 2~3줄
+      const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
+      const tooClose = ladderLines.some(line => line.col === col && Math.abs(line.y - lineY) < minGap);
+      if (!tooClose) {
+        const x1 = spacing * (col + 1);
+        const x2 = spacing * (col + 2);
+        ctx.beginPath();
+        ctx.moveTo(x1, lineY);
+        ctx.lineTo(x2, lineY);
+        ctx.stroke();
+        ladderLines.push({ y: lineY, col });
+        count++;
+      }
     }
-    attempts++;
   }
+
   ladderLines.sort((a, b) => a.y - b.y);
 
   // 참가자 버튼
