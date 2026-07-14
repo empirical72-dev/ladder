@@ -8,22 +8,22 @@
 <body>
   <h1>사다리 타기</h1>
 
-  <div>
+  <div class="input-group">
     참가자: <input id="playerInput" type="text">
-    <button onclick="addPlayer()">추가</button>
+    <button id="addPlayerBtn">추가</button>
     <ul id="playerList"></ul>
   </div>
 
-  <div>
+  <div class="input-group">
     항목: <input id="itemName" type="text">
     개수: <input id="itemCount" type="number">
-    <button onclick="addItem()">추가</button>
+    <button id="addItemBtn">추가</button>
     <ul id="itemList"></ul>
   </div>
 
-  <div>
-    <button onclick="drawLadder()">사다리 실행</button>
-    <button onclick="resetGame()">전체 리셋</button>
+  <div class="control-group">
+    <button id="drawBtn">사다리 실행</button>
+    <button id="resetBtn">전체 리셋</button>
   </div>
 
   <canvas id="ladderCanvas" width="800" height="500"></canvas>

@@ -1,3 +1,9 @@
+// 버튼 이벤트 연결
+document.getElementById("addPlayerBtn").addEventListener("click", addPlayer);
+document.getElementById("addItemBtn").addEventListener("click", addItem);
+document.getElementById("drawBtn").addEventListener("click", drawLadder);
+document.getElementById("resetBtn").addEventListener("click", resetGame);
+
 let players = [];
 let items = [];
 let playerLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
