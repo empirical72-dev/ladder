@@ -100,13 +100,14 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 가로줄 생성 (절대 겹치지 않게, 각 열마다 2~3줄 보장)
+  // 가로줄 생성 (절대 겹치지 않게, 위쪽/아래쪽 모두 간격 유지)
   const minGap = 40;   // 최소 간격
-  const safeGap = 40;  // 시작점 아래 안전거리
+  const safeGapTop = 40;   // 위쪽 안전거리
+  const safeGapBottom = 40; // 아래쪽 안전거리
   for (let col = 0; col < players.length - 1; col++) {
     let count = 0;
     while (count < 3) {
-      const lineY = topMargin + safeGap + Math.random() * (bottomMargin - topMargin - safeGap);
+      const lineY = topMargin + safeGapTop + Math.random() * (bottomMargin - topMargin - safeGapTop - safeGapBottom);
       const tooClose = ladderLines.some(line => Math.abs(line.y - lineY) < minGap);
       if (!tooClose) {
         const x1 = spacing * (col + 1);
@@ -168,6 +169,7 @@ function animatePlayer(index, shuffledItems) {
             x = targetX;
             requestAnimationFrame(step);
           });
+          return; // 가로 이동 중에는 세로 이동 중단
         } else if (col === line.col + 1) {
           crossed = true;
           usedLines.add(key);
@@ -177,6 +179,7 @@ function animatePlayer(index, shuffledItems) {
             x = targetX;
             requestAnimationFrame(step);
           });
+          return;
         }
       }
     }
