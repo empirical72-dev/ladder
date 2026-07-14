@@ -100,7 +100,7 @@ function drawLadder() {
     ctx.fillText(item.name, x - 30, bottomMargin + 30);
   });
 
-  // 가로줄 생성 (위/아래 모두 안전거리 적용, 절대 겹치지 않음)
+  // 가로줄 생성
   const minGap = 40;
   const safeGapTop = 40;
   const safeGapBottom = 40;
@@ -135,7 +135,7 @@ function drawLadder() {
   });
 }
 
-// 새로운 구조의 애니메이션
+// 새로운 구조 애니메이션
 function animatePlayer(index, shuffledItems) {
   const spacing = canvas.width / (players.length + 1);
   const topMargin = 80;
@@ -146,7 +146,7 @@ function animatePlayer(index, shuffledItems) {
   const color = playerColors[index % playerColors.length];
 
   let usedLines = new Set();
-  let state = "vertical"; // 현재 상태: vertical 또는 horizontal
+  let state = "vertical";
   let targetX = null;
 
   function step() {
@@ -184,7 +184,7 @@ function animatePlayer(index, shuffledItems) {
           addResult(players[index], item);
         }
       } else {
-        requestAnimationFrame(step); // 다음 루프에서 horizontal 실행
+        requestAnimationFrame(step);
       }
 
     } else if (state === "horizontal") {
@@ -192,10 +192,9 @@ function animatePlayer(index, shuffledItems) {
       x += stepSize;
 
       if ((stepSize > 0 && x >= targetX) || (stepSize < 0 && x <= targetX)) {
-        // 가로 이동 완료
         if (targetX > spacing * (col + 1)) col++;
         else col--;
-        state = "vertical"; // 다시 세로 이동으로 전환
+        state = "vertical";
       }
       requestAnimationFrame(step);
     }

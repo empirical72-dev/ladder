@@ -2,40 +2,33 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>사다리 게임</title>
+  <title>사다리 타기</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>사다리 게임</h1>
+  <h1>사다리 타기</h1>
 
-  <!-- 참가자 입력 -->
-  <div class="input-row">
-    <input type="text" id="playerInput" placeholder="참가자 입력">
+  <div>
+    참가자: <input id="playerInput" type="text">
     <button onclick="addPlayer()">추가</button>
+    <ul id="playerList"></ul>
   </div>
-  <ul id="playerList"></ul>
 
-  <!-- 항목 입력 -->
-  <div class="input-row">
-    <input type="text" id="itemName" placeholder="항목 입력">
-    <input type="number" id="itemCount" placeholder="개수">
+  <div>
+    항목: <input id="itemName" type="text">
+    개수: <input id="itemCount" type="number">
     <button onclick="addItem()">추가</button>
+    <ul id="itemList"></ul>
   </div>
-  <ul id="itemList"></ul>
 
-  <!-- 전체 리셋 & 실행 -->
-  <div id="controls">
-    <button onclick="resetGame()">전체 리셋</button>
+  <div>
     <button onclick="drawLadder()">사다리 실행</button>
+    <button onclick="resetGame()">전체 리셋</button>
   </div>
 
-  <!-- 참가자 버튼 -->
-  <div id="playerButtons"></div>
-
-  <!-- 사다리 그림 -->
   <canvas id="ladderCanvas" width="800" height="500"></canvas>
 
-  <!-- 결과 -->
+  <div id="playerButtons"></div>
   <div id="result"></div>
 
   <script src="script.js"></script>
